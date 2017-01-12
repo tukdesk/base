@@ -16,6 +16,10 @@ var (
 )
 
 func Open(engine, source string, opts ...Option) error {
+	if engine == "" {
+		engine = defaultEngine
+	}
+
 	mu.Lock()
 	defer mu.Unlock()
 
@@ -60,6 +64,10 @@ func Open(engine, source string, opts ...Option) error {
 }
 
 func Get(engine string) (*Conn, error) {
+	if engine == "" {
+		engine = defaultEngine
+	}
+
 	mu.RLock()
 	instace := instances[engine]
 	mu.RUnlock()
