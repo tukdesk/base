@@ -49,7 +49,9 @@ func Open(engine, source string, opts ...Option) error {
 
 	conn := &Conn{
 		DB: db,
-		d:  d,
+		SQL: Builder{
+			d: d,
+		},
 	}
 
 	for _, one := range opts {
@@ -90,95 +92,5 @@ func MustGet(engine string) *Conn {
 
 type Conn struct {
 	*sql.DB
-	d dbr.Dialect
-}
-
-func (this *Conn) BuildSQL(stmt dbr.Builder) (string, error) {
-	return dbr.InterpolateForDialect("?", []interface{}{stmt}, this.d)
-}
-
-func (this *Conn) MustBuildSQL(stmt dbr.Builder) string {
-	query, err := this.BuildSQL(stmt)
-	if err != nil {
-		panic(err)
-	}
-
-	return query
-}
-
-func (Conn) InsertInto(table string) *dbr.InsertStmt {
-	return dbr.InsertInto(table)
-}
-
-func (Conn) InsertBySQL(query string, value ...interface{}) *dbr.InsertStmt {
-	return dbr.InsertBySql(query, value...)
-}
-
-func (this *Conn) Select(colunm ...string) *dbr.SelectStmt {
-	c := make([]interface{}, len(colunm))
-	for i, one := range colunm {
-		c[i] = one
-	}
-
-	return this.SelectEx(c...)
-}
-
-func (Conn) SelectEx(colunm ...interface{}) *dbr.SelectStmt {
-	return dbr.Select(colunm...)
-}
-
-func (Conn) SelectBySQL(query string, value ...interface{}) *dbr.SelectStmt {
-	return dbr.SelectBySql(query, value...)
-}
-
-func (Conn) Update(table string) *dbr.UpdateStmt {
-	return dbr.Update(table)
-}
-
-func (Conn) UpdateBySQL(query string, value ...interface{}) *dbr.UpdateStmt {
-	return dbr.UpdateBySql(query, value...)
-}
-
-func (Conn) DeleteFrom(table string) *dbr.DeleteStmt {
-	return dbr.DeleteFrom(table)
-}
-
-func (Conn) DeleteBySQL(query string, value ...interface{}) *dbr.DeleteStmt {
-	return dbr.DeleteBySql(query, value...)
-}
-
-func (Conn) Expr(query string, value ...interface{}) dbr.Builder {
-	return dbr.Expr(query, value...)
-}
-
-func (Conn) And(cond ...dbr.Builder) dbr.Builder {
-	return dbr.And(cond...)
-}
-
-func (Conn) Or(cond ...dbr.Builder) dbr.Builder {
-	return dbr.Or(cond...)
-}
-
-func (Conn) Eq(column string, value interface{}) dbr.Builder {
-	return dbr.Eq(column, value)
-}
-
-func (Conn) Neq(column string, value interface{}) dbr.Builder {
-	return dbr.Neq(column, value)
-}
-
-func (Conn) Gt(column string, value interface{}) dbr.Builder {
-	return dbr.Gt(column, value)
-}
-
-func (Conn) Gte(column string, value interface{}) dbr.Builder {
-	return dbr.Gte(column, value)
-}
-
-func (Conn) Lt(column string, value interface{}) dbr.Builder {
-	return dbr.Lt(column, value)
-}
-
-func (Conn) Lte(column string, value interface{}) dbr.Builder {
-	return dbr.Lte(column, value)
+	SQL Builder
 }
