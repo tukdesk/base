@@ -15,18 +15,7 @@ var (
 	nullEvtReceiver = &dbr.NullEventReceiver{}
 )
 
-func Open(engine, source string, opts ...Option) error {
-	if engine == "" {
-		engine = defaultEngine
-	}
-
-	mu.Lock()
-	defer mu.Unlock()
-
-	if _, ok := instances[engine]; ok {
-		return fmt.Errorf("duplicate db instance %q", engine)
-	}
-
+func New(engine, source string, opts ...Option) (*Conn, error) {
 	var d dbr.Dialect
 	switch engine {
 	case MYSQL:
@@ -39,12 +28,12 @@ func Open(engine, source string, opts ...Option) error {
 		d = dialect.SQLite3
 
 	default:
-		return fmt.Errorf("unsupport engine %q", engine)
+		return nil, fmt.Errorf("unsupport engine %q", engine)
 	}
 
 	db, err := sql.Open(engine, source)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	conn := &Conn{
@@ -58,6 +47,26 @@ func Open(engine, source string, opts ...Option) error {
 		if one != nil {
 			one(conn)
 		}
+	}
+
+	return conn, nil
+}
+
+func Open(engine, source string, opts ...Option) error {
+	if engine == "" {
+		engine = defaultEngine
+	}
+
+	mu.Lock()
+	defer mu.Unlock()
+
+	if _, ok := instances[engine]; ok {
+		return fmt.Errorf("duplicate db instance %q", engine)
+	}
+
+	conn, err := New(engine, source, opts...)
+	if err != nil {
+		return err
 	}
 
 	instances[engine] = conn

@@ -98,6 +98,10 @@ func (Builder) Lte(column string, value interface{}) dbr.Builder {
 	return dbr.Lte(column, value)
 }
 
+func (Builder) I(s string) dbr.I {
+	return dbr.I(s)
+}
+
 func (Builder) Order(col string, desc bool) Order {
 	return Order{
 		Column: col,
