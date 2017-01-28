@@ -103,3 +103,15 @@ type Conn struct {
 	*sql.DB
 	SQL Builder
 }
+
+func (this *Conn) ExecStmt(stmt dbr.Builder, args ...interface{}) (sql.Result, error) {
+	return this.DB.Exec(this.SQL.MustBuild(stmt), args...)
+}
+
+func (this *Conn) QueryStmt(stmt dbr.Builder, args ...interface{}) (*sql.Rows, error) {
+	return this.DB.Query(this.SQL.MustBuild(stmt), args...)
+}
+
+func (this *Conn) QueryRowStmt(stmt dbr.Builder, args ...interface{}) *sql.Row {
+	return this.DB.QueryRow(this.SQL.MustBuild(stmt), args...)
+}
