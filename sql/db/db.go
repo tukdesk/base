@@ -13,7 +13,17 @@ var (
 	mu              sync.RWMutex
 	instances       = map[string]*Conn{}
 	nullEvtReceiver = &dbr.NullEventReceiver{}
+
+	_ Executor = &Conn{}
+	_ Executor = &Tx{}
 )
+
+type Executor interface {
+	ExecStmt(stmt dbr.Builder, args ...interface{}) (sql.Result, error)
+	QueryStmt(stmt dbr.Builder, args ...interface{}) (*sql.Rows, error)
+	QueryRowStmt(stms dbr.Builder, args ...interface{}) *sql.Row
+	SQL() *Builder
+}
 
 func New(engine, source string, opts ...Option) (*Conn, error) {
 	var d dbr.Dialect
@@ -38,7 +48,7 @@ func New(engine, source string, opts ...Option) (*Conn, error) {
 
 	conn := &Conn{
 		DB: db,
-		SQL: Builder{
+		builder: &Builder{
 			d: d,
 		},
 	}
@@ -101,17 +111,54 @@ func MustGet(engine string) *Conn {
 
 type Conn struct {
 	*sql.DB
-	SQL Builder
+	builder *Builder
 }
 
 func (this *Conn) ExecStmt(stmt dbr.Builder, args ...interface{}) (sql.Result, error) {
-	return this.DB.Exec(this.SQL.MustBuild(stmt), args...)
+	return this.DB.Exec(this.builder.MustBuild(stmt), args...)
 }
 
 func (this *Conn) QueryStmt(stmt dbr.Builder, args ...interface{}) (*sql.Rows, error) {
-	return this.DB.Query(this.SQL.MustBuild(stmt), args...)
+	return this.DB.Query(this.builder.MustBuild(stmt), args...)
 }
 
 func (this *Conn) QueryRowStmt(stmt dbr.Builder, args ...interface{}) *sql.Row {
-	return this.DB.QueryRow(this.SQL.MustBuild(stmt), args...)
+	return this.DB.QueryRow(this.builder.MustBuild(stmt), args...)
+}
+
+func (this *Conn) SQL() *Builder {
+	return this.builder
+}
+
+func (this *Conn) BeginTx() (*Tx, error) {
+	tx, err := this.DB.Begin()
+	if err != nil {
+		return nil, err
+	}
+
+	return &Tx{
+		Tx:      tx,
+		builder: this.builder,
+	}, nil
+}
+
+type Tx struct {
+	*sql.Tx
+	builder *Builder
+}
+
+func (this *Tx) ExecStmt(stmt dbr.Builder, args ...interface{}) (sql.Result, error) {
+	return this.Tx.Exec(this.builder.MustBuild(stmt), args...)
+}
+
+func (this *Tx) QueryStmt(stmt dbr.Builder, args ...interface{}) (*sql.Rows, error) {
+	return this.Tx.Query(this.builder.MustBuild(stmt), args...)
+}
+
+func (this *Tx) QueryRowStmt(stmt dbr.Builder, args ...interface{}) *sql.Row {
+	return this.Tx.QueryRow(this.builder.MustBuild(stmt), args...)
+}
+
+func (this *Tx) SQL() *Builder {
+	return this.builder
 }
