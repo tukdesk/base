@@ -6,8 +6,12 @@ const (
 	SQLITE3    = "sqlite3"
 )
 
-var defaultEngine string
+var defaultEngine = MYSQL
 
-func DefaultEngine(engine string) {
+func DefaultEngine() string {
+	return defaultEngine
+}
+
+func SetDefaultEngine(engine string) {
 	defaultEngine = engine
 }
