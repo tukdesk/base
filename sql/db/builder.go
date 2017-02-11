@@ -102,6 +102,13 @@ func (Builder) I(s string) dbr.I {
 	return dbr.I(s)
 }
 
+func (Builder) Where(where interface{}, conds ...interface{}) Where {
+	return Where{
+		Where: where,
+		Conds: conds,
+	}
+}
+
 func (Builder) Order(col string, desc bool) Order {
 	return Order{
 		Column: col,
